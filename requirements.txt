@@ -1,12 +1,10 @@
 fastapi
 uvicorn
-pillow
-numpy
 python-multipart
-torch
-torchvision
-transformers==4.48.0
-accelerate
-requests
 python-dotenv
+requests
+pillow
 opencv-python-headless
+numpy
+openai
+cloudinary
