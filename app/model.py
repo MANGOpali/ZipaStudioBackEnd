@@ -148,20 +148,23 @@ def _validate_input(image_bytes: bytes) -> Image.Image:
     - Applies EXIF rotation (critical for phone photos)
     - Rejects oversized images
     Raises ValueError with a clear message on failure.
+
+    Note: We skip img.verify() because WhatsApp and some phone cameras
+    produce JPEGs with non-standard metadata that causes verify() to
+    raise false positives. Instead we do a full decode attempt which
+    is a more reliable real-world validity check.
     """
     if len(image_bytes) < 1024:
         raise ValueError("File too small to be a valid image.")
 
     try:
+        # Full decode is more reliable than verify() for real-world images
         img = Image.open(io.BytesIO(image_bytes))
-        img.verify()  # Checks file integrity without full decode
+        img.load()  # Force full decode — catches truly corrupt files
     except Exception:
         raise ValueError("Invalid or corrupt image file.")
 
-    # Re-open after verify() — verify() exhausts the internal stream
-    img = Image.open(io.BytesIO(image_bytes))
-
-    # Fix EXIF rotation — phone photos are often rotated 90/180/270
+    # Fix EXIF rotation — phone/WhatsApp photos are often rotated
     try:
         img = ImageOps.exif_transpose(img)
     except Exception:
